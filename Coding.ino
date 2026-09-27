@@ -1,4 +1,3 @@
-
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <Keypad.h>
@@ -125,10 +124,12 @@ void loop() {
     rfid.PCD_StopCrypto1();
   }
 
-  // 4. 检测矩阵键盘输入 / Keypad Input Check
+   // 4. 检测矩阵键盘输入 / Keypad Input Check
   char key = keypad.getKey();
   if (key) {
     turnOnScreen();
+    playKeyTone(); // ⚠️ 每次按下密码键盘，蜂鸣器短响 40ms 提示音
+
     if (key == '#') { // '#' 键确认 / '#' as Confirm Key
       if (inputPassword == correctPassword) {
         wrongAttempts = 0;
@@ -160,6 +161,13 @@ void loop() {
 }
 
 // ================= 功能子函数 / Functions =================
+
+// 按键短促提示音 / Keypress Beep Tone
+void playKeyTone() {
+  digitalWrite(BUZZER_RED_PIN, HIGH);
+  delay(40); // 响 40 毫秒短音
+  digitalWrite(BUZZER_RED_PIN, LOW);
+}
 
 // 执行完整的开门逻辑 / Unlock Door Routine
 // 通电收回铁锁 -> SG90 驱动开门 -> 延时 -> 关门闭锁
