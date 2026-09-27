@@ -40,10 +40,15 @@ String inputPassword = "";
 int wrongAttempts = 0;
 const int maxAttempts = 3;
 
-// 已注册的 RFID 卡片 UID / Registered RFID Card UID
-byte registeredUID[4] = {0x5B, 0x57, 0xB6, 0xE3};
+// ================= 多卡注册支持 / Multi-Card Support =================
+// 设置允许开门授权卡片总数 / Number of authorized cards
+const byte NUM_CARDS = 2; 
 
-
+// 存储多张已授权卡片 16 进制 UID / Array storing authorized card UIDs
+byte registeredUIDs[NUM_CARDS][4] = {
+  {0x5B, 0x57, 0xB6, 0xE3}, // 第 1 张卡（白色 IC 薄卡）） / Card 1
+  {0x10, 0x12, 0x88, 0x56}, // 第 2 张卡（蓝色钥匙扣）  / Card 2
+};
 
 
 // 人体感应与 LCD 背光计时 / LCD Backlight Timer
@@ -252,14 +257,24 @@ void turnOnScreen() {
   lastMotionTime = millis();
 }
 
-// 比对 RFID UID / Verify RFID UID
+// 多卡 UID 循环比对 / Verify RFID UID against multiple registered cards
 bool checkRFIDUID(byte *readUID, byte bufferSize) {
   if (bufferSize != 4) return false;
-  for (byte i = 0; i < 4; i++) {
-    if (readUID[i] != registeredUID[i]) return false;
+  
+  // 遍历所有已注册的卡片 UID / Loop through registered cards
+  for (byte c = 0; c < NUM_CARDS; c++) {
+    bool match = true;
+    for (byte i = 0; i < 4; i++) {
+      if (readUID[i] != registeredUIDs[c][i]) {
+        match = false;
+        break;
+      }
+    }
+    if (match) return true; // 只要匹配到其中任意一张，直接开门 / Match found
   }
-  return true;
+  return false;
 }
+
 
 // LCD 辅助显示函数 / LCD Display Helper
 void updateDisplay(String line1, String line2) {
