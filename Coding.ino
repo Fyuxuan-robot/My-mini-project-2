@@ -133,7 +133,7 @@ void loop() {
   char key = keypad.getKey();
   if (key) {
     turnOnScreen();
-    playKeyTone(); // ⚠️ 每次按下密码键盘，蜂鸣器短响 40ms 提示音
+    playKeyTone(); // 按键提示音
 
     if (key == '#') { // '#' 键确认 / '#' as Confirm Key
       if (inputPassword == correctPassword) {
@@ -144,18 +144,24 @@ void loop() {
         wrongAttempts++;
         inputPassword = "";
         if (wrongAttempts >= maxAttempts) {
-          triggerAlarm(); // 错 3 次触发报警 / Trigger Alarm after 3 Failures
+          triggerAlarm(); // 错 3 次触发报警
           wrongAttempts = 0;
         } else {
           updateDisplay(" Wrong Password ", " Try Again: " + String(wrongAttempts) + "/3");
           triggerShortWarning();
         }
       }
-    } else if (key == '*') { // '*' 键清空 / '*' as Clear Key
-      inputPassword = "";
-      updateDisplay(" Clear Input ", " Enter Password ");
+    } else if (key == '*') { 
+      if (inputPassword == "") {
+        // 未输入数字时按 '*' 键，进入修改密码流程 / Press '*' when input is empty to change password
+        changePasswordProcess();
+      } else {
+        // 已输入数字时按 '*' 键，清空当前输入 / Clear input
+        inputPassword = "";
+        updateDisplay(" Clear Input ", " Enter Password ");
+      }
     } else {
-      if (inputPassword.length() < 8) { // 限制输入长度 / Limit Length
+      if (inputPassword.length() < 8) { // 限制输入长度
         inputPassword += key;
         String mask = "";
         for (int i = 0; i < inputPassword.length(); i++) mask += "*";
@@ -164,7 +170,89 @@ void loop() {
     }
   }
 }
+// ================= 修改密码功能函数 / Change Password Routine =================
+void changePasswordProcess() {
+  // --- 第一步：验证旧密码 / Step 1: Verify Old Password ---
+  updateDisplay(" Change Password", " Enter Old Pass ");
+  delay(1200);
+  updateDisplay(" Old Password: ", " > ");
 
+  String oldInput = "";
+  while (true) {
+    char key = keypad.getKey();
+    if (key) {
+      playKeyTone();
+      if (key == '#') {
+        if (oldInput == correctPassword) {
+          break; // 旧密码正确，进入第二步 / Verified successfully
+        } else {
+          updateDisplay(" Wrong Old Pass ", " Access Denied! ");
+          triggerShortWarning();
+          inputPassword = "";
+          return; // 旧密码错误，退出修改流程
+        }
+      } else if (key == '*') {
+        updateDisplay(" Cancelled ", " Enter Password ");
+        delay(1000);
+        inputPassword = "";
+        return;
+      } else {
+        if (oldInput.length() < 8) {
+          oldInput += key;
+          String mask = "";
+          for (int i = 0; i < oldInput.length(); i++) mask += "*";
+          updateDisplay(" Old Password: ", mask);
+        }
+      }
+    }
+    checkProximity();
+  }
+
+  // --- 第二步：输入并保存新密码 / Step 2: Enter & Save New Password ---
+  updateDisplay(" Pass Verified ", " Set New (4-8) ");
+  delay(1200);
+  updateDisplay(" New Password: ", " > ");
+
+  String newPass = "";
+  while (true) {
+    char key = keypad.getKey();
+    if (key) {
+      playKeyTone();
+      if (key == '#') {
+        if (newPass.length() >= 4) { // 限制最少 4 位密码
+          correctPassword = newPass; // 更新全局密码变量 / Update password
+          updateDisplay(" Password Saved ", " New Pass Active ");
+          digitalWrite(GREEN_LED_PIN, HIGH);
+          playKeyTone(); delay(100); playKeyTone();
+          digitalWrite(GREEN_LED_PIN, LOW);
+          delay(1500);
+          inputPassword = "";
+          updateDisplay(" System Ready ", " Enter Password ");
+          return;
+        } else {
+          updateDisplay(" Too Short! ", " Min 4 Digits ");
+          delay(1200);
+          String mask = "";
+          for (int i = 0; i < newPass.length(); i++) mask += "*";
+          updateDisplay(" New Password: ", mask);
+        }
+      } else if (key == '*') {
+        updateDisplay(" Cancelled ", " Enter Password ");
+        delay(1000);
+        inputPassword = "";
+        return;
+      } else {
+        if (newPass.length() < 8) {
+          newPass += key;
+          String mask = "";
+          for (int i = 0; i < newPass.length(); i++) mask += "*";
+          updateDisplay(" New Password: ", mask);
+        }
+      }
+    }
+    checkProximity();
+  }
+}
 // ================= 功能子函数 / Functions =================
 
 // 按键短促提示音 / Keypress Beep Tone
