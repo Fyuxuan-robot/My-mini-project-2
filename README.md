@@ -1,3 +1,8 @@
+Arduino Smart Password & RFID Door Access System Guide 
+
+
+
+
 本教程包含详细的引脚连接表、电源分配方案（支持 12V 电磁锁）以及完整的 Arduino C++ 源码（支持多张 RFID 卡片注册与动态修改密码）。
 This tutorial includes a detailed pinout table, power distribution scheme (for 12V solenoid lock), and complete Arduino C++ source code.
 
