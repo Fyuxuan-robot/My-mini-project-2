@@ -53,7 +53,7 @@ byte registeredUIDs[NUM_CARDS][4] = {
 
 // 人体感应与 LCD 背光计时 / LCD Backlight Timer
 unsigned long lastMotionTime = 0;
-const unsigned long lcdTimeout = 5000; // 5秒无人靠近自动熄屏 / 5s Timeout
+const unsigned long lcdTimeout = 15000; // 15秒无人靠近自动熄屏 / 5s Timeout
 
 void setup() {
   // 引脚模式设置 / Pin Modes
@@ -71,7 +71,7 @@ void setup() {
 
   // 舵机初始化 / Servo Setup
   doorServo.attach(SERVO_PIN);
-  doorServo.write(0);                 // 关门角度 0° / Closed Position 0°
+  doorServo.write(180);                 // 关门角度 180° / Closed Position 180°
 
   // LCD 初始化 / LCD Setup
   lcd.init();
@@ -276,8 +276,8 @@ void unlockDoor() {
   doorServo.write(90);
   delay(4000); // 保持开门状态 4 秒 / Keep Door Open for 4s
 
-  // 4. SG90 舵机旋转归位 0 度关门 / Servo back to 0°
-  doorServo.write(0);
+  // 4. SG90 舵机旋转归位 180 度关门 / Servo back to 0°
+  doorServo.write(180);
   delay(1200); // 等待门完全合上 / Wait for door to close
 
   // 5. 电磁锁断电，锁舌弹回锁定 / De-energize Relay, Lock Solenoid
